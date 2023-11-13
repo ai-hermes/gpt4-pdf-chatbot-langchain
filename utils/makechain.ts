@@ -1,4 +1,7 @@
 import { ChatOpenAI } from 'langchain/chat_models/openai';
+import { PineconeStore } from 'langchain/vectorstores/pinecone';
+import { ConversationalRetrievalQAChain } from 'langchain/chains';
+import { chatBaseCfg, extraCfg } from '@/config/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
 import { RunnableSequence } from 'langchain/schema/runnable';
 import { StringOutputParser } from 'langchain/schema/output_parser';
@@ -29,6 +32,8 @@ If the question is not related to the context or chat history, politely respond 
 Question: {question}
 Helpful answer in markdown:`;
 
+
+
 const combineDocumentsFn = (docs: Document[], separator = '\n\n') => {
   const serializedDocs = docs.map((doc) => doc.pageContent);
   return serializedDocs.join(separator);
@@ -39,10 +44,7 @@ export const makeChain = (retriever: VectorStoreRetriever) => {
     ChatPromptTemplate.fromTemplate(CONDENSE_TEMPLATE);
   const answerPrompt = ChatPromptTemplate.fromTemplate(QA_TEMPLATE);
 
-  const model = new ChatOpenAI({
-    temperature: 0, // increase temperature to get more creative answers
-    modelName: 'gpt-3.5-turbo', //change this to gpt-4 if you have access
-  });
+  const model = new ChatOpenAI(chatBaseCfg, extraCfg);
 
   // Rephrase the initial question into a dereferenced standalone question based on
   // the chat history to allow effective vectorstore querying.
