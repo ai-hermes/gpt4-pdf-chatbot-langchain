@@ -11,7 +11,7 @@ const openai = new OpenAI({
         modelName: 'azure/text-embedding-ada-002',
         openAIApiKey: '***',
     }, {
-        apiKey: 'f11d7cc34c18059950bfa45f467a4c017198362c03f34c31984cad8692a37769',
+        apiKey: '***',
         basePath: '***',
     });
     const res = await embeddings.embedQuery("The food was delicious and the waiter...")
