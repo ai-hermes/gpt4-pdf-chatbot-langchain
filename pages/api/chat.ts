@@ -7,6 +7,7 @@ import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME } from '@/config/pinecone';
 import { embeddingBaseCfg, extraCfg } from '@/config/openai';
 import { prisma } from '@/utils/prisma';
+import _ from 'lodash';
 
 export default async function handler(
   req: NextApiRequest,
@@ -79,6 +80,7 @@ export default async function handler(
       select: {
         rect_info: true,
         content: true,
+        chunk_id: true,
       },
       where: {
         chunk_id: {
@@ -86,8 +88,15 @@ export default async function handler(
         }
       }
     })
+    const groupedHs = _.groupBy(hs, 'chunk_id');
+    const sourceDocumentsWithHs = sourceDocuments.map(s => {
+      return {
+        ...s,
+        highlight: groupedHs[s.metadata['uuid']]
+      }
+    })
     console.log('response', response);
-    res.status(200).json({ text: response, sourceDocuments, highlight: hs });
+    res.status(200).json({ text: response, sourceDocuments:sourceDocumentsWithHs, highlight: hs });
   } catch (error: any) {
     console.log('error', error);
     res.status(500).json({ error: error.message || 'Something went wrong' });
