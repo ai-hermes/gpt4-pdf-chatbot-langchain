@@ -6,6 +6,7 @@ import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME } from '@/config/pinecone';
 import { embeddingBaseCfg, extraCfg } from '@/config/openai';
+import { prisma } from '@/utils/prisma';
 
 export default async function handler(
   req: NextApiRequest,
@@ -73,9 +74,20 @@ export default async function handler(
     });
 
     const sourceDocuments = await documentPromise;
-
+    const uuids = sourceDocuments.map(d => d.metadata['uuid']).filter(Boolean);
+    const hs = await prisma.content_items.findMany({
+      select: {
+        rect_info: true,
+        content: true,
+      },
+      where: {
+        chunk_id: {
+          in: uuids
+        }
+      }
+    })
     console.log('response', response);
-    res.status(200).json({ text: response, sourceDocuments });
+    res.status(200).json({ text: response, sourceDocuments, highlight: hs });
   } catch (error: any) {
     console.log('error', error);
     res.status(500).json({ error: error.message || 'Something went wrong' });
