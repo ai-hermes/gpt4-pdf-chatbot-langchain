@@ -8,6 +8,7 @@ import { PINECONE_INDEX_NAME } from '@/config/pinecone';
 import { embeddingBaseCfg, extraCfg } from '@/config/openai';
 import { prisma } from '@/utils/prisma';
 import _ from 'lodash';
+import { JsonObject } from '@prisma/client/runtime/library';
 
 export default async function handler(
   req: NextApiRequest,
@@ -76,11 +77,12 @@ export default async function handler(
 
     const sourceDocuments = await documentPromise;
     const uuids = sourceDocuments.map(d => d.metadata['uuid']).filter(Boolean);
-    const hs = await prisma.content_items.findMany({
+    let hs = await prisma.content_items.findMany({
       select: {
         rect_info: true,
         content: true,
         chunk_id: true,
+        origin_info: true,
       },
       where: {
         chunk_id: {
@@ -88,7 +90,14 @@ export default async function handler(
         }
       }
     })
-    const groupedHs = _.groupBy(hs, 'chunk_id');
+    const hsWithPageNumber = hs.map(h => {
+      const pageNumber = (h.origin_info as JsonObject)?.['pageNumber'] as Number;
+      return {
+        ...h,
+        pageNumber,
+      }
+    })
+    const groupedHs = _.groupBy(hsWithPageNumber, 'chunk_id');
     const sourceDocumentsWithHs = sourceDocuments.map(s => {
       return {
         ...s,
@@ -96,7 +105,8 @@ export default async function handler(
       }
     })
     console.log('response', response);
-    res.status(200).json({ text: response, sourceDocuments:sourceDocumentsWithHs, highlight: hs });
+    // , highlight: hs
+    res.status(200).json({ text: response, sourceDocuments:sourceDocumentsWithHs });
   } catch (error: any) {
     console.log('error', error);
     res.status(500).json({ error: error.message || 'Something went wrong' });
