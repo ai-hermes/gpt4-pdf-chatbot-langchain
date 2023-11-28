@@ -254,8 +254,9 @@ debugger
                                             }
                                             onMouseOut={hideTip}
                                             key={index}
-                                            children={component}
-                                        />
+                                        >
+                                            {component}
+                                        </Popup>
                                     );
                                 }}
                                 highlights={highlights}
