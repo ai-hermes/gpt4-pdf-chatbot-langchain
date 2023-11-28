@@ -139,7 +139,7 @@ export default function Home() {
   const updateHash = (highlight: IHighlight) => {
     document.location.hash = `highlight-${highlight.id}`;
   };
-  const clickSourceDocument = (doc: Document<Record<string, any>> & {
+  type HightlightDocument = Document<Record<string, any>> & {
     highlight: Array<{
       chunk_id: string;
       content: string;
@@ -154,7 +154,8 @@ export default function Home() {
         width: number;
       }
     }>
-  }) => {
+  }
+  const clickSourceDocument = (doc: HightlightDocument) => {
     const mappedHighlight = doc.highlight.map(h => {
       const r = {
         x1: h.rect_info.x1,
@@ -258,7 +259,7 @@ export default function Home() {
                                         <h3>Source {index + 1}</h3>
                                       </AccordionTrigger>
                                       <AccordionContent className='cursor-pointer' onClick={() => {
-                                        clickSourceDocument(doc)
+                                        clickSourceDocument(doc as HightlightDocument)
                                       }}>
                                         <ReactMarkdown linkTarget="_blank">
                                           {doc.pageContent}
