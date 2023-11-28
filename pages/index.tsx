@@ -17,7 +17,7 @@ import PdfComponent from '@/components/ui/pdf'
 import { cn} from '@/utils/cn'
 import { useAtom } from 'jotai';
 import { hightlightAtom } from '@/components/ui/pdf/store'
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import {IHighlight} from '@/components/ui/react-pdf-highlighter/types'
 import MD5 from 'crypto-js/md5';
 export default function Home() {
