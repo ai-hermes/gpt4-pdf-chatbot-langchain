@@ -1,27 +1,45 @@
-import { useRef, useState, useEffect } from 'react';
-import Layout from '@/components/layout';
-import styles from '@/styles/Home.module.css';
-import { Message } from '@/types/chat';
-import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
-import LoadingDots from '@/components/ui/LoadingDots';
+import MD5 from 'crypto-js/md5';
+import { useAtom } from 'jotai';
 import { Document } from 'langchain/document';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+// import { v4 as uuidv4 } from 'uuid';
+
+import Layout from '@/components/layout';
+import LoadingDots from '@/components/ui/LoadingDots';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import PdfComponent from '@/components/ui/pdf';
+import { hightlightAtom } from '@/components/ui/pdf/store';
+import { IHighlight } from '@/types/pdf'
+import styles from '@/styles/Home.module.css';
+import { Message } from '@/types/chat';
+import { cn } from '@/utils/cn';
+import { PdfPreview } from '@/components/pdf-preview'
 
-import PdfComponent from '@/components/ui/pdf'
-import { cn} from '@/utils/cn'
-import { useAtom } from 'jotai';
-import { hightlightAtom } from '@/components/ui/pdf/store'
-// import { v4 as uuidv4 } from 'uuid';
-import {IHighlight} from '@/components/ui/react-pdf-highlighter/types'
-import MD5 from 'crypto-js/md5';
+type HightlightDocument = Document<Record<string, any>> & {
+  highlight: Array<{
+    chunk_id: string;
+    content: string;
+    origin_info: Record<string, any>;
+    pageNumber:number;
+    rect_info: {
+      x1: number;
+      x2: number;
+      y1: number;
+      y2: number;
+      height: number;
+      width: number;
+    }
+  }>
+}
+
 export default function Home() {
-
   const [query, setQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +57,6 @@ export default function Home() {
     ],
     history: [],
   });
-
   const { messages, history } = messageState;
 
   const messageListRef = useRef<HTMLDivElement>(null);
@@ -133,28 +150,14 @@ export default function Home() {
     setIsMounted(true);
   }, []);
   const [highlight, setHighlight] = useAtom(hightlightAtom);
+
   if (!isMounted) {
     return null;
   }
   const updateHash = (highlight: IHighlight) => {
     document.location.hash = `highlight-${highlight.id}`;
   };
-  type HightlightDocument = Document<Record<string, any>> & {
-    highlight: Array<{
-      chunk_id: string;
-      content: string;
-      origin_info: Record<string, any>;
-      pageNumber:number;
-      rect_info: {
-        x1: number;
-        x2: number;
-        y1: number;
-        y2: number;
-        height: number;
-        width: number;
-      }
-    }>
-  }
+
   const clickSourceDocument = (doc: HightlightDocument) => {
     const mappedHighlight = doc.highlight.map(h => {
       const r = {
@@ -180,18 +183,19 @@ export default function Home() {
     })
     console.log('mappedHighlight', mappedHighlight)
     setHighlight(mappedHighlight)
-    updateHash(mappedHighlight[0])
+    // updateHash(mappedHighlight[0])
   }
+
   return (
     <>
       <Layout>
-        <div className="w-full mx-auto flex flex-col gap-4">
-          
-          <div className="grid grid-cols-8 gap-2 ">
-            <div className='col-span-4 '>
-              <PdfComponent />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="grid grid-cols-8 gap-2 h-full">
+            <div className='col-span-4 h-full overflow-scroll'>
+              {/* <PdfComponent /> */}
+              <PdfPreview src={url} highlights={highlight} />
             </div>
-            <div className='col-span-4 overflow-hidden'>
+            <div className='col-span-4 h-full overflow-hidden'>
               <h1 className="text-2xl font-bold leading-[1.1] text-center">
                 Chat With Your Docs
               </h1>
@@ -332,7 +336,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <footer className="m-auto p-4">
+        <footer className="flex-none m-auto p-4">
           <a href="https://twitter.com/mayowaoshin">
             Powered by LangChainAI. Demo built by Mayo (Twitter: @mayowaoshin).
           </a>

@@ -113,7 +113,6 @@ class App extends Component<{highlights: IHighlight[]}, State> {
 
     scrollToHighlightFromHash = () => {
         const highlight = this.getHighlightById(parseIdFromHash());
-debugger
         if (highlight) {
             this.scrollViewerTo(highlight);
         }
@@ -188,10 +187,10 @@ debugger
                     // width: "75vw",
                     position: "relative",
                 }}
-            > 
+            >
                 <PdfLoader url={url} beforeLoad={<Spinner />} >
                     {(pdfDocument) => {
-                        
+
                         return (
                             <PdfHighlighter
                                 pdfDocument={pdfDocument}
